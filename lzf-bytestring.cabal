@@ -63,8 +63,22 @@ test-suite test
 
   ghc-options: -Wall
 
+benchmark bench
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: bench
+  default-language:    Haskell2010
+  build-depends:
+      base
+    , lzf-bytestring
+    , criterion
+    , bytestring
 
---TODO: benchmark
+  if flag(lib-Werror)
+    ghc-options: -Werror
+
+  ghc-options: -Wall
+
 
 source-repository head
   type:     git

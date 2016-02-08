@@ -30,6 +30,7 @@ before_install:
 script:
   - stack $ARGS setup
   - stack $ARGS --no-terminal test --haddock --test-arguments="--quickcheck-tests 100000"
+  - stack $ARGS bench
   - stack $ARGS build
   - stack $ARGS sdist
 
