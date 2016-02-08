@@ -28,7 +28,7 @@ before_install:
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
 script:
-  - stack $ARGS --no-terminal --install-ghc test --haddock --test-arguments="--quickcheck-tests 1000000"
+  - stack $ARGS --no-terminal --install-ghc test --haddock --test-arguments="--quickcheck-tests 100000"
   - stack build
   - stack ghc -- --make examples/Main.hs -o /dev/null
   - stack sdist
