@@ -13,6 +13,7 @@ module Codec.Compression.LZF
 
 -------------------------------------------------------------------------------
 import           Control.Exception
+import Debug.Trace
 import           Data.Bits
 import           Data.ByteString   as BS
 import           Data.Typeable
@@ -72,11 +73,11 @@ compress str
         -- They do mention that it will be less than 104% of original
         -- size. We're going to treat this as a reliable constant and always allocate 105% of original length
         -- let bufLen = ceiling (bufferFactor * ((len + 2) % 1))
-        --TODO: i don't understand why I need a +2 here and why lzfMaxCompressedSize isn't enough. are there extra chars at play?
-        let bufLen = lzfMaxCompressedSize ((max len 2) + 1)
+         --TODO: why does this magic number just work...
+        let bufLen = (lzfMaxCompressedSize len) + 3
         resLen <- compress' inp len out bufLen
         rawRes <- if resLen == 0
-                    then error "Impossible compression buffer size error"
+                    then traceShow (BS.length str, len, bufLen, str) $ error "Impossible compression buffer size error"
                     else do BS.packCStringLen (out, (fromIntegral resLen))
         return (LZFCompressed rawRes)
   where
