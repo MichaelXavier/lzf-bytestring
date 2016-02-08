@@ -1,0 +1,71 @@
+name:                lzf-bytestring
+version:             0.0.0.0
+synopsis:            A Haskell binding to the liblzf by Marc Lehmann. LZF is a fast compression algorithm sacrifising compression quality for an extra bit of speed. The tiny library is contained in the source and statically linked in the Haskell library resulting in no external dependencies. A bytestring-based alternative to the Codec-Compression-LZF package.
+description:         Please see README.md
+homepage:            http://github.com/MichaelXavier/lzf-bytestring#readme
+license:             MIT
+license-files:
+  LICENSE
+  cbits/liblzf-3.6/LICENSE
+  README.md
+author:              Michael Xavier
+maintainer:          michael@michaelxavier.net
+copyright:           2015 Michael Xavier
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+flag lib-Werror
+  default: False
+  manual: True
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Codec.Compression.LZF
+  build-depends:       base >= 4.5 && < 5
+                     , bytestring
+  default-language:    Haskell2010
+
+  if flag(lib-Werror)
+    ghc-options: -Werror
+
+  ghc-options: -Wall
+
+  c-sources:
+    cbits/liblzf-3.6/lzf_c.c
+    cbits/liblzf-3.6/lzf_d.c
+
+  include-dirs:
+    cbits/liblzf-3.6
+
+  --TODO: doublecheck
+  --install-headers:
+  --  cbits/liblzf-3.6/lzf.h
+
+
+test-suite test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Main.hs
+  build-depends:       base
+                     , lzf-bytestring
+                     , tasty
+                     , tasty-quickcheck
+                     , bytestring
+                     , quickcheck-instances
+                     , QuickCheck
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+  if flag(lib-Werror)
+    ghc-options: -Werror
+
+  ghc-options: -Wall
+
+
+--TODO: benchmark
+
+source-repository head
+  type:     git
+  location: https://github.com/MichaelXavier/lzf-bytestring
