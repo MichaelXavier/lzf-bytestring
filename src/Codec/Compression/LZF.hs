@@ -13,12 +13,12 @@ module Codec.Compression.LZF
 
 -------------------------------------------------------------------------------
 import           Control.Exception
-import Debug.Trace
 import           Data.Bits
-import           Data.ByteString   as BS
+import           Data.ByteString        as BS
 import           Data.Typeable
 import           Foreign
 import           Foreign.C
+import           Foreign.Marshal.Unsafe
 -------------------------------------------------------------------------------
 
 --TODO: why IO? should these be unsafe?
@@ -51,13 +51,13 @@ newtype LZFCompressed = LZFCompressed {
 
 --TODO: look carefully at buffer size requirements for compression
 -- i think i need to rethink this. maybe we need to do this blockwise, otherwise we need to know exact length when decrypting
-compress :: ByteString -> IO LZFCompressed
+compress :: ByteString -> LZFCompressed
 compress str
   -- No point in compressing a null string, and the length would come
   -- back as 0 (which is also the error code, thanks C).
-  | BS.null str = return (LZFCompressed str)
+  | BS.null str = LZFCompressed str
   | otherwise = do
-    BS.useAsCStringLen str $ \(inp, len) ->
+    unsafeLocalState $ BS.useAsCStringLen str $ \(inp, len) ->
       allocaBytes len $ \out -> do
         -- lzf actually recommends using a len - 1 buffer size to
         -- ensure that the final string is smaller and if its not, to
@@ -77,7 +77,7 @@ compress str
         let bufLen = (lzfMaxCompressedSize len) + 3
         resLen <- compress' inp len out bufLen
         rawRes <- if resLen == 0
-                    then traceShow (BS.length str, len, bufLen, str) $ error "Impossible compression buffer size error"
+                    then error "Impossible compression buffer size error"
                     else do BS.packCStringLen (out, (fromIntegral resLen))
         return (LZFCompressed rawRes)
   where
@@ -108,10 +108,13 @@ data LZFDecompressionError = DecompressionBufferTooSmall
 instance Exception LZFDecompressionError
 
 
-decompress :: BufferStrategy -> LZFCompressed -> IO (Either LZFDecompressionError ByteString)
+decompress
+    :: BufferStrategy
+    -> LZFCompressed
+    -> Either LZFDecompressionError ByteString
 decompress strat (LZFCompressed str)
-  | BS.null str = return (Right str)
-  | otherwise = BS.useAsCStringLen str $ \(inStr, inStrLen) ->
+  | BS.null str = Right str
+  | otherwise = unsafeLocalState $ BS.useAsCStringLen str $ \(inStr, inStrLen) ->
       go inStr inStrLen startingBufSize
   where
     startingBufSize = case strat of
