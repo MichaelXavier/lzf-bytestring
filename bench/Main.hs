@@ -21,18 +21,22 @@ main = defaultMain
 
 -------------------------------------------------------------------------------
 compressBenchmark :: Benchmark
-compressBenchmark = bench "compress" (whnfIO (compress example))
+compressBenchmark = bench "compress" (whnf compress example)
 
 
 -------------------------------------------------------------------------------
 decompressBenchmark :: Benchmark
-decompressBenchmark = env (lzfCompressed <$> compress example) $ \ ~(compressed) -> do
-  bench "decompress" (whnfIO (decompress (KnownUncompressedSize exampleLength) (LZFCompressed compressed)))
+decompressBenchmark =
+  bench "decompress" (whnf (decompress (KnownUncompressedSize exampleLength)) compressedExample)
 
 -------------------------------------------------------------------------------
 example :: ByteString
 example = "The quick brown fox jumps over the lazy dog"
 
+
+-------------------------------------------------------------------------------
+compressedExample :: LZFCompressed
+compressedExample = compress example
 
 -------------------------------------------------------------------------------
 exampleLength :: Int
